@@ -13,6 +13,8 @@
 #include <conio.h>
 #include "libxl.h"
 
+#pragma comment( linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")
+
 #define WORD  unsigned int
 
 //#define SHOWLINES               //Show the delaunay triangles
