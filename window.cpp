@@ -1,18 +1,19 @@
 //Header Declaration
-#include "cv.h"
-#include "highgui.h"
+#include "opencv/cv.h"
+#include "opencv/highgui.h"
 
 #include <iostream>
 #include <string>
 #include <fstream>
-//#include <Clarkson-Delaunay.h>
-#include "planeFitting.h"
-#include "PTE.h"
+#include "triangulation-source\Clarkson-Delaunay.h"
+#include "planeFitting-source\planeFitting.h"
+#include "GME-source\PTE.h"
 
 #include <stdio.h>
 #include <conio.h>
-#include "libxl.h"
+#include "libxl-source\include_c\libxl.h"
 
+#pragma comment(lib,"../libxl.lib")
 #pragma comment( linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")
 
 #define WORD  unsigned int
@@ -35,7 +36,7 @@
 WORD *BuildTriangleIndexList (void *pointList, float factor, int numberOfInputPoints,
                               int numDimensions, int clockwise, int *numTriangleVertices);
 int drawlines_drag( int point, IplImage* selectedImg );
-void onMouseDrag(int event,int x,int y,int flags,void* param);
+void onMouseDrag(int event, int x, int y, int flags, void* param);
 //*****************************structure**************************************************//
 typedef struct data_Struct
 {
@@ -191,7 +192,7 @@ char PictureList_dir[128];
 /**************************For Drag and Drop********************************************/
 //added in v0.7.0
 IplImage *selectedImg= 0;
-int point= -1;
+int mpoint= -1;
 IplImage* tempImg;
 /***************************************************************************************/
 int temp_img_num= 0;
@@ -3718,7 +3719,7 @@ else if( (x> Image[0][1])&& (x< Image[1][1]) &&(y> Image[0][0]) &&(y< Image[1][0
 
 
 //Another mouse handler for the drag and drop of the dots, and its sub-functions
-int drawlines_drag( int point, IplImage* selectedImg )
+int drawlines_drag( int mpoint, IplImage* selectedImg )
 {
    //int *best_index;
 	int best_index[10];
@@ -3764,7 +3765,7 @@ int drawlines_drag( int point, IplImage* selectedImg )
 
    for(k1=0; k1< numTriangleVertices; k1+=3)
    {
-	   if ((( triangleIndexList[k1] != point )&& ( triangleIndexList[k1+1] != point )&& ( triangleIndexList[k1+2] != point ))|| (point==0))
+	   if ((( triangleIndexList[k1] != mpoint )&& ( triangleIndexList[k1+1] != mpoint )&& ( triangleIndexList[k1+2] != mpoint ))|| (mpoint==0))
 	   {
 			P1_x= inputNum[5*(triangleIndexList[k1])+1];   
 			P1_y= inputNum[5*(triangleIndexList[k1])+2];
@@ -3821,16 +3822,16 @@ IplImage* findImg(int x, int y)
 	xx= int(( x- offset_x)*x_scale);
 	yy= int(( y- offset_y)*x_scale);
 
-	point = -1;
+	mpoint = -1;
 	for (int i= 0; i< count; i++) {
 		if  (   ( (xx<inputNum[5*i+1]+10)&&(xx>inputNum[5*i+1]-10) ) && ( (yy<inputNum[5*i+2]+10)&&(yy>inputNum[5*i+2]-10) )  )
 		{
-			point= i; //point selected. It is the i_th point. 
+			mpoint= i; //point selected. It is the i_th point. 
 		}
 	}
 
 	//draw latest-updated lines
-    drawlines_drag(point, selectedImg);
+    drawlines_drag(mpoint, selectedImg);
 
 	//show selectedImg
 	//cvShowImage("Drag & Drop", selectedImg);
@@ -3845,11 +3846,11 @@ void releaseImg(IplImage* selectedImg, int x, int y)
 	xx= int(( x- offset_x)*x_scale);
 	yy= int(( y- offset_y)*x_scale);
 
-    inputNum[5*point+1]= xx;
-	inputNum[5*point+2]= yy;
+    inputNum[5*mpoint+1]= xx;
+	inputNum[5*mpoint+2]= yy;
 
 	//set point to -1. Point unselected.
-	point= -1;
+	mpoint= -1;
 
 	//update
 	drawlines_drag(0, selectedImg);
@@ -3954,7 +3955,7 @@ void onMouseDrag(int event,int x,int y,int flags,void* param)
 				selectedImg = cvCloneImage(groundImg_copy);
 				buttonLight_unlimited ( Drag, selectedImg );
 				//draw latest-updated lines
-				drawlines_drag(point, selectedImg);
+				drawlines_drag(mpoint, selectedImg);
 				//show selectedImg
 				cvShowImage("background", selectedImg);
 			}
@@ -3997,7 +3998,7 @@ void onMouseDrag(int event,int x,int y,int flags,void* param)
 		break;
 
 	case CV_EVENT_LBUTTONUP:	//left mouse button release
-		if((selectedImg!=NULL)&&point!=-1){
+		if((selectedImg!=NULL)&& mpoint!=-1){
 			releaseImg(selectedImg,x,y); //save and update coordinates
 			selectedImg=NULL;
 		}
@@ -4005,7 +4006,7 @@ void onMouseDrag(int event,int x,int y,int flags,void* param)
 
 	case CV_EVENT_MOUSEMOVE:
 		/* draw a rectangle*/
-		if(point!=-1){
+		if(mpoint!=-1){
 			if(selectedImg!=NULL){
 				tempImg = cvCloneImage(selectedImg);
 				cvRectangle(tempImg,
@@ -4015,7 +4016,7 @@ void onMouseDrag(int event,int x,int y,int flags,void* param)
 
 				//adjust the lines
 				for(int i= 0;i< count-1;i++){
-					if(i!=point){
+					if(i!=mpoint){
 						
 						cvLine(tempImg,
 							cvPoint(x,y ),
