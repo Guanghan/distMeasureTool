@@ -3661,51 +3661,64 @@ else if( (x> Image[0][1])&& (x< Image[1][1]) &&(y> Image[0][0]) &&(y< Image[1][0
 			   cvCircle( t, cvPoint(CV_MAT_ELEM( *remapX, float, yWholeImg, xWholeImg), CV_MAT_ELEM( *remapY, float, yWholeImg, xWholeImg)), 3, CvColorRed, 1, 8, 0 );
 			   cvShowImage("undistorted image", t);
 #endif
-			   //printf("(xx2, yy2) :(%f, %f)\n ",*xx2,*yy2);
-               if (times> 0)
-               {
-				   
-				  gdata->distance_from_previous_point[times]= drawlines(pointarray, times-1, times); printf("\n Distance: %.2f \n", gdata->distance_from_previous_point[times]); 
-				  gdata->cursor_x_position[times]= x;
-			      gdata->cursor_y_position[times]= y;
-			      gdata->distance_from_camera[times]=   0.1* sqrt((*xx2)*(*xx2)+ (*yy2)*(*yy2)+ (*zz2)*(*zz2)) ;
-			      gdata->sum_distance_sequence += gdata->distance_from_previous_point[times];   
-				  gdata->angle_animal_camera= atan2((*xx2),(-1)*(*yy2)) * 180/3.14;
-				  gdata->angle_animal_animal= acos((-1)* (      (gdata->distance_from_previous_point[times])*(gdata->distance_from_previous_point[times])
-					                                      -(gdata->distance_from_camera[times])*(gdata->distance_from_camera[times])
-													      -(gdata->distance_from_camera[times-1])*(gdata->distance_from_camera[times-1])   )/ (2*(gdata->distance_from_camera[times])*(gdata->distance_from_camera[times-1]))) *180/3.14;
-										  
+			   printf("(xx2, yy2) :(%f, %f)\n ",*xx2,*yy2);
 
+			   if (times >= 0)
+			   {
+
+				   if (times == 0)
+				   {
+					   gdata->distance_from_previous_point[times] = drawlines(pointarray, times, times);
+					   gdata->cursor_x_position[times] = x;
+					   gdata->cursor_y_position[times] = y;
+					   gdata->distance_from_camera[times] = 0.1* sqrt((*xx2)*(*xx2) + (*yy2)*(*yy2) + (*zz2)*(*zz2));
+					   gdata->sum_distance_sequence += gdata->distance_from_previous_point[times];
+					   gdata->angle_animal_camera = 0;
+					   gdata->angle_animal_animal = 0;
+				   }
+				   else
+				   {
+					   gdata->distance_from_previous_point[times] = drawlines(pointarray, times - 1, times); printf("\n Distance: %.2f \n", gdata->distance_from_previous_point[times]);
+					   gdata->cursor_x_position[times] = x;
+					   gdata->cursor_y_position[times] = y;
+					   gdata->distance_from_camera[times] = 0.1* sqrt((*xx2)*(*xx2) + (*yy2)*(*yy2) + (*zz2)*(*zz2));
+					   gdata->sum_distance_sequence += gdata->distance_from_previous_point[times];
+					   gdata->angle_animal_camera = atan2((*xx2), (-1)*(*yy2)) * 180 / 3.14;
+					   gdata->angle_animal_animal = acos((-1)* ((gdata->distance_from_previous_point[times])*(gdata->distance_from_previous_point[times])
+						   - (gdata->distance_from_camera[times])*(gdata->distance_from_camera[times])
+						   - (gdata->distance_from_camera[times - 1])*(gdata->distance_from_camera[times - 1])) / (2 * (gdata->distance_from_camera[times])*(gdata->distance_from_camera[times - 1]))) * 180 / 3.14;
+
+				   }
 #ifdef SAVE_TXT                    
-				  fprintf( fp_DATA, "          %s                   %s                     %d                 %d                   %f                   %f                   %f               %f               %f\n", 
-					                folder_name[folder_num],
-									PicName[img_num],
-					                gdata->cursor_x_position[times],
-									gdata->cursor_y_position[times],
-									gdata->distance_from_camera[times],
-									gdata->distance_from_previous_point[times],
-									gdata->sum_distance_sequence,
-									gdata->angle_animal_camera,
-									gdata->angle_animal_animal);
+				   fprintf(fp_DATA, "          %s                   %s                     %d                 %d                   %f                   %f                   %f               %f               %f\n",
+					   folder_name[folder_num],
+					   PicName[img_num],
+					   gdata->cursor_x_position[times],
+					   gdata->cursor_y_position[times],
+					   gdata->distance_from_camera[times],
+					   gdata->distance_from_previous_point[times],
+					   gdata->sum_distance_sequence,
+					   gdata->angle_animal_camera,
+					   gdata->angle_animal_animal);
 #endif
 #ifdef SAVE_XLS
-				  if(sheet){
-					  //printf("HIHIHIHI\n");
-					  which_row++;
-					  xlSheetWriteStr(sheet, which_row, 0, folder_name[folder_num], 0);
-					  xlSheetWriteStr(sheet, which_row, 1, PicName[img_num], 0);
-					  xlSheetWriteNum(sheet, which_row, 2,  gdata->cursor_x_position[times], 0);
-					  xlSheetWriteNum(sheet, which_row, 3,  gdata->cursor_y_position[times], 0);
-					  xlSheetWriteNum(sheet, which_row, 4,  gdata->distance_from_camera[times], 0);
-					  xlSheetWriteNum(sheet, which_row, 5,  gdata->distance_from_previous_point[times], 0);
-					  xlSheetWriteNum(sheet, which_row, 6,  gdata->sum_distance_sequence, 0);
-					  xlSheetWriteNum(sheet, which_row, 7,  gdata->angle_animal_camera, 0);
-					  xlSheetWriteNum(sheet, which_row, 8,  gdata->angle_animal_animal, 0);
-					  xlSheetWriteStr(sheet, 0, 8, "angle_animal_animal", 0); //in case this software says buyme here.
-					  if (xlBookSave(book, "../data.xls"))  ;//printf("xml Saved!\n");
-				  }
+				   if (sheet){
+					   //printf("HIHIHIHI\n");
+					   which_row++;
+					   xlSheetWriteStr(sheet, which_row, 0, folder_name[folder_num], 0);
+					   xlSheetWriteStr(sheet, which_row, 1, PicName[img_num], 0);
+					   xlSheetWriteNum(sheet, which_row, 2, gdata->cursor_x_position[times], 0);
+					   xlSheetWriteNum(sheet, which_row, 3, gdata->cursor_y_position[times], 0);
+					   xlSheetWriteNum(sheet, which_row, 4, gdata->distance_from_camera[times], 0);
+					   xlSheetWriteNum(sheet, which_row, 5, gdata->distance_from_previous_point[times], 0);
+					   xlSheetWriteNum(sheet, which_row, 6, gdata->sum_distance_sequence, 0);
+					   xlSheetWriteNum(sheet, which_row, 7, gdata->angle_animal_camera, 0);
+					   xlSheetWriteNum(sheet, which_row, 8, gdata->angle_animal_animal, 0);
+					   xlSheetWriteStr(sheet, 0, 8, "angle_animal_animal", 0); //in case this software says buyme here.
+					   if (xlBookSave(book, "../data.xls"));//printf("xml Saved!\n");
+				   }
 #endif
-               }
+			   }
                times++;
                writeNumber(times-1, pointarray);
                break;
